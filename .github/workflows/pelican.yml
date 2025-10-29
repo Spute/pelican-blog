@@ -1,25 +1,61 @@
+# 文件路径：.github/workflows/pelican.yml
+# 用途：在推送到 main 分支时，自动构建 Pelican 静态网站，并部署到 Cloudflare Pages
+
 name: Build and Deploy Pelican
+
 on:
   push:
-    branches: [ main ]
+    branches: [ main ]   # 🚀 当推送到 main 分支时自动触发构建（可根据需要修改）
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest   # 💻 使用最新的 Ubuntu 环境作为构建机
+
     steps:
-      - uses: actions/checkout@v4
+      # ==============================
+      # 1️⃣ 拉取项目代码（包含主题子模块）
+      # ==============================
+      - name: Checkout repository (include submodules)
+        uses: actions/checkout@v4
+        with:
+          submodules: true     # ✅ 关键：确保主题（submodule）一并被下载
+          fetch-depth: 0       # 建议完整拉取分支信息（有些 Pelican 插件依赖 git 信息）
+
+      # ==============================
+      # 2️⃣ 安装 Python 环境
+      # ==============================
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.12'  # ⚙️ 指定 Python 版本
+
+      # ==============================
+      # 3️⃣ 安装 Pelican 及依赖
+      # ==============================
       - name: Install dependencies
-        run: pip install pelican markdown
+        run: |
+          pip install pelican markdown   # ✍️ 根据你的项目需要，也可以加插件依赖，比如 pelican[markdown,typogrify]
+
+      # ==============================
+      # 4️⃣ 构建 Pelican 静态网站
+      # ==============================
       - name: Build site
-        run: pelican content -o output -s pelicanconf.py
+        run: |
+          pelican content -o output -s pelicanconf.py
+          # ⬆️
+          # content/          → 你的 Markdown 或 rst 文件目录
+          # output/           → Pelican 生成的静态网站输出目录
+          # pelicanconf.py    → Pelican 配置文件
+
+      # ==============================
+      # 5️⃣ 部署到 Cloudflare Pages
+      # ==============================
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/pages-action@v1
         with:
-          apiToken: ${{ secrets.CF_API_TOKEN }}
-          accountId: ${{ secrets.CF_ACCOUNT_ID }}
-          projectName: pelican-blog
-          directory: ./output
+          apiToken: ${{ secrets.CF_API_TOKEN }}     # 🔐 从 GitHub Secrets 读取 Cloudflare API Token
+          accountId: ${{ secrets.CF_ACCOUNT_ID }}   # 🔐 从 GitHub Secrets 读取 Cloudflare Account ID
+          projectName: pelican-blog                 # ⚠️ 替换成你在 Cloudflare Pages 的项目名
+          directory: ./output                       # 🌐 指定要上传的静态文件目录（即 Pelican 输出目录）
+
+      # ✅ 完成后，你会在 Cloudflare Pages 控制台看到一条新部署记录
