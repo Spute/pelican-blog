@@ -10,7 +10,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest   # 💻 使用最新的 Ubuntu 环境作为构建机
-
+    env:
+      R2_BUCKET: ${{ secrets.CF_R2_BUCKET }}           # 🔐 从 GitHub Secrets 读取 R2 Bucket 名称
+      R2_PUBLIC_URL: ${{ secrets.CF_R2_PUBLIC_URL }}   # 🔐 从 GitHub Secrets 读取 R2 公共 URL
     steps:
       # ==============================
       # 1️⃣ 拉取项目代码（包含主题子模块）
@@ -47,6 +49,58 @@ jobs:
           # output/           → Pelican 生成的静态网站输出目录
           # pelicanconf.py    → Pelican 配置文件
 
+      # -------------------------------
+      # 6️⃣ 在 GitHub Actions 中安装 rclone
+      # -------------------------------
+      - name: Setup rclone
+        run: |
+          curl https://rclone.org/install.sh | sudo bash
+
+      # -------------------------------
+      # 5️⃣ 配置 rclone 与 R2
+      # -------------------------------
+      - name: Configure rclone for R2
+        run: |
+          cat <<EOF > ~/.config/rclone/rclone.conf
+          [r2]
+          type = s3
+          provider = Cloudflare
+          access_key_id = ${{ secrets.R2_ACCESS_KEY_ID }}
+          secret_access_key = ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          endpoint = ${{ secrets.R2_ENDPOINT }}
+          EOF
+
+      # -------------------------------
+      # 6️⃣ 同步 /output/static 到 R2
+      # -------------------------------
+      - name: Upload static files to R2
+        run: |
+          echo "☁️ 同步静态资源到 R2..."
+          rclone sync output/static "r2:${R2_BUCKET}/static" --progress
+
+      # -------------------------------
+      # 7️⃣ 替换 HTML 中 /static/ 路径
+      # -------------------------------
+      - name: Replace static URLs in HTML
+        run: |
+          echo "🔄 替换 HTML 内的静态资源路径..."
+          find output -type f -name "*.html" -print0 | \
+          xargs -0 sed -E -i "s|(src|href)=[\"']\/static\/|\1=\"${R2_PUBLIC_URL}/static/|g"
+
+      # -------------------------------
+      # 8️⃣ 验证上传结果并删除 static
+      # -------------------------------
+      - name: Verify and clean up static
+        run: |
+          echo "🔍 验证 R2 上传..."
+          if rclone check output/static "r2:${R2_BUCKET}/static" --one-way --size-only; then
+            echo "✅ 文件验证通过，删除本地 output/static"
+            rm -rf output/static
+          else
+            echo "❌ 检查失败，保留本地文件"
+            exit 1
+          fi
+
       # ==============================
       # 5️⃣ 部署到 Cloudflare Pages
       # ==============================
@@ -57,5 +111,3 @@ jobs:
           accountId: ${{ secrets.CF_ACCOUNT_ID }}   # 🔐 从 GitHub Secrets 读取 Cloudflare Account ID
           projectName: pelican-blog                 # ⚠️ 替换成你在 Cloudflare Pages 的项目名
           directory: ./output                       # 🌐 指定要上传的静态文件目录（即 Pelican 输出目录）
-
-      # ✅ 完成后，你会在 Cloudflare Pages 控制台看到一条新部署记录
