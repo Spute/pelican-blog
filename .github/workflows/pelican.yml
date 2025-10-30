@@ -104,7 +104,9 @@ jobs:
         run: |
           echo "🔄 替换 HTML 内的静态资源路径..."
           find output -type f -name "*.html" -print0 | \
-          xargs -0 sed -E -i "s|(src|href)=[\"']\/static\/|\1=\"${R2_PUBLIC_URL}/static/|g"
+          xargs -0 sed -i -E "s|src=['\"]\/static\/|src=\"${R2_PUBLIC_URL}/static/|g"
+          find output -type f -name "*.html" -print0 | \
+          xargs -0 sed -i -E "s|href=['\"]\/static\/|href=\"${R2_PUBLIC_URL}/static/|g"
 
       # -------------------------------
       # 8️⃣ 验证上传结果并删除 static
