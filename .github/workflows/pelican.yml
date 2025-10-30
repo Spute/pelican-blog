@@ -69,6 +69,14 @@ jobs:
             endpoint "${{ secrets.R2_ENDPOINT }}" \
             region auto \
             --non-interactive
+            --config ~/.config/rclone/rclone.conf
+
+      # -------------------------------
+      # 5️⃣ 检查 rclone配置是否成功
+      # -------------------------------
+      - name: Verify rclone config
+        run: |
+          rclone listremotes --config ~/.config/rclone/rclone.conf
 
       # -------------------------------
       # 6️⃣ 同步 /output/static 到 R2
