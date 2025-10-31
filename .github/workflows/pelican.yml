@@ -84,7 +84,7 @@ jobs:
       # -------------------------------
       - name: Run static_link_replace.py
         run: |
-          python scripts/static_link_replace.py
+          python static_link_replace.py
 
       # -------------------------------
       # 8️⃣ 验证上传结果并删除 static
