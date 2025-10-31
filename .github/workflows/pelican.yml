@@ -36,7 +36,7 @@ jobs:
       # ==============================
       - name: Install dependencies
         run: |
-          pip install pelican markdown   # ✍️ 根据你的项目需要，也可以加插件依赖，比如 pelican[markdown,typogrify]
+          pip install pelican markdown beautifulsoup4  # ✍️ 根据你的项目需要，也可以加插件依赖，比如 pelican[markdown,typogrify]
 
       # ==============================
       # 4️⃣ 构建 Pelican 静态网站
@@ -72,24 +72,6 @@ jobs:
           --config ~/.config/rclone/rclone.conf
 
       # -------------------------------
-      # 5️⃣ 检查 rclone配置是否成功
-      # -------------------------------
-      - name: Verify rclone config
-        run: |
-          rclone listremotes --config ~/.config/rclone/rclone.conf
-      
-      - name: Show rclone config file location
-        run: |
-          echo "📂 rclone 配置文件位置："
-          rclone config file
-          echo "📋 文件内容（如果存在）："
-          if [ -f ~/.config/rclone/rclone.conf ]; then
-            cat ~/.config/rclone/rclone.conf
-          else
-            echo "⚠️ 文件不存在"
-          fi
-
-      # -------------------------------
       # 6️⃣ 同步 /output/static 到 R2
       # -------------------------------
       - name: Upload static files to R2
@@ -98,15 +80,11 @@ jobs:
           rclone sync output/static "r2:${R2_BUCKET}/static" --progress
 
       # -------------------------------
-      # 7️⃣ 替换 HTML 中 /static/ 路径
+      # 5️⃣ 执行 static_link_replace.py 替换 HTML 中的静态资源路径
       # -------------------------------
-      - name: Replace static URLs in HTML
+      - name: Run static_link_replace.py
         run: |
-          echo "🔄 替换 HTML 内的静态资源路径..."
-          find output -type f -name "*.html" -print0 | \
-          xargs -0 sed -i -E "s|src=['\"]\/static\/|src=\"${R2_PUBLIC_URL}/static/|g"
-          find output -type f -name "*.html" -print0 | \
-          xargs -0 sed -i -E "s|href=['\"]\/static\/|href=\"${R2_PUBLIC_URL}/static/|g"
+          python scripts/static_link_replace.py
 
       # -------------------------------
       # 8️⃣ 验证上传结果并删除 static
