@@ -26,7 +26,7 @@ def replace_static_paths_in_html(directory: str, url_prefix: str):
                 # 替换 <img> 和其他带 src 属性的标签
                 for tag in soup.find_all(src=True):
                     original_src = tag['src']
-                    if original_src.startswith("/static/"):
+                    if original_src.startswith("static/"):
                         new_src = f"{url_prefix}{original_src}"
                         tag['src'] = new_src
                         modified = True
@@ -35,7 +35,7 @@ def replace_static_paths_in_html(directory: str, url_prefix: str):
                 # 替换 <link> 和其他带 href 属性的标签
                 for tag in soup.find_all(href=True):
                     original_href = tag['href']
-                    if original_href.startswith("/static/"):
+                    if original_href.startswith("static/"):
                         new_href = f"{url_prefix}{original_href}"
                         tag['href'] = new_href
                         modified = True
