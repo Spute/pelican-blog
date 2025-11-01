@@ -27,7 +27,7 @@ def replace_static_paths_in_html(directory: str, url_prefix: str):
                 for tag in soup.find_all(src=True):
                     original_src = tag['src']
                     if original_src.startswith("static/"):
-                        new_src = f"{url_prefix}{original_src}"
+                        new_src = f"{url_prefix}/{original_src}"
                         tag['src'] = new_src
                         modified = True
                         print(f"修改：src={original_src} -> src={new_src}")
@@ -36,7 +36,7 @@ def replace_static_paths_in_html(directory: str, url_prefix: str):
                 for tag in soup.find_all(href=True):
                     original_href = tag['href']
                     if original_href.startswith("static/"):
-                        new_href = f"{url_prefix}{original_href}"
+                        new_href = f"{url_prefix}/{original_href}"
                         tag['href'] = new_href
                         modified = True
                         print(f"修改：href={original_href} -> href={new_href}")
