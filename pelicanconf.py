@@ -35,7 +35,7 @@ DEFAULT_PAGINATION = 10
 # RELATIVE_URLS = True
 
 # 静态文件路径配置
-STATIC_PATHS = ['images', 'pdfs', 'files', 'static']
+STATIC_PATHS = ['images', 'pdfs', 'files', 'static', "91d0499f4d5b4863b404de2c4ae96b7c.txt"]
 
 # THEME = 'pelican-themes/gum'
 # THEME = 'pelican-themes/elegant'
